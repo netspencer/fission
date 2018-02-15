@@ -187,48 +187,10 @@ helm_install_fission() {
 	 --name $id		\
 	 --set $helmVars	\
 	 --namespace $ns        \
+	 --debug                \
 	 $ROOT/charts/fission-all
 
     helm list
-}
-
-wait_for_service() {
-    id=$1
-    svc=$2
-    health_endpoint=$3
-
-    ns=f-$id
-    retry=0
-    max_retries=5
-    while true
-    do
-        retry=$((retry+1))
-        if ((retry == max_retries)); then
-            echo "Waiting for $svc to be routable exceeded max retries. Quitting.."
-            exit 1
-        fi
-        ip=$(kubectl -n $ns get svc $svc -o jsonpath='{...ip}')
-        if [ -z $ip ]; then
-            continue
-        fi
-        http_status=`curl -sw "%{http_code}" "http://$ip/$health_endpoint"`
-        echo "http_status for svc $svc : $http_status"
-        if [ "$http_status" -ne "200" ]; then
-            echo "Service $svc returned response other than 200. waiting for 200 after backing off for 1 second"
-            sleep 1
-        else
-            break
-        fi
-    done
-}
-
-wait_for_services() {
-    id=$1
-
-    echo "\n--- wait for controller and router services to be routable ---"
-    wait_for_service $id controller "healthz"
-    wait_for_service $id router "router-healthz"
-    echo "\n--- end wait for controller and router services to be routable ---"
 }
 
 dump_kubernetes_events() {
@@ -299,7 +261,6 @@ dump_builder_pod_logs() {
     done
     echo "--- end builder pod logs $p ---"
     done
-
 }
 
 dump_function_pod_logs() {

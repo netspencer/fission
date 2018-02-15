@@ -22,6 +22,10 @@ Windows:
   $ export FISSION_URL=http://$(kubectl --namespace fission get svc controller -o=jsonpath='{..ip}')
   $ export FISSION_ROUTER=$(kubectl --namespace fission get svc router -o=jsonpath='{..ip}')
 
+{{- else if contains "ClusterIP" .Values.serviceType }}
+  $ export FISSION_NAMESPACE={{.Release.Namespace}}
+  $ curl -Lo port-forward-router.sh https://github.com/fission/fission/port-forward-router.sh && chmod +x port-forward-router.sh && ./port-forward-router.sh {{.Release.Namespace}} router
+
 {{- end }}
 
 3. Finally, you're ready to use Fission!
